@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCHOOLBOOK — My Bookings</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div id="nav-ph"></div>
+  <div class="page-wrap" style="position:relative;z-index:1;">
+    <div class="flex-b mb3" style="flex-wrap:wrap;gap:1rem;">
+      <div class="page-header" style="margin-bottom:0;">
+        <h1>// MY BOOKINGS</h1>
+        <p style="font-family:var(--mono);font-size:.72rem;color:var(--text3);">Track status of your facility requests.</p>
+      </div>
+      <a href="book.html" class="btn btn-primary">+ NEW BOOKING</a>
+    </div>
+
+    <!-- FILTERS -->
+    <div style="display:flex;gap:.8rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center;">
+      <div class="searchbar" style="flex:1;min-width:180px;">
+        <span class="ico">›</span>
+        <input type="text" id="search" placeholder="search facility, purpose..." oninput="render()"/>
+      </div>
+      <select id="filter" class="form-select" style="width:auto;" onchange="render()">
+        <option value="">ALL STATUS</option>
+        <option value="pending">PENDING</option>
+        <option value="inreview">IN REVIEW</option>
+        <option value="approved">APPROVED</option>
+        <option value="rejected">REJECTED</option>
+      </select>
+    </div>
+
+    <div class="card" style="overflow:hidden;">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>BOOKING ID</th><th>FACILITY</th><th>PURPOSE</th>
+            <th>DATE</th><th>TIME</th><th>LED</th><th>STATUS</th><th>FILED</th><th></th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty" class="empty" style="display:none;">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No bookings found.</div>
+        <div class="empty-sub"><a href="book.html" style="color:var(--green);">Submit a request →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="overlay" id="detail-overlay">
+    <div class="modal" style="max-width:600px;">
+      <button class="modal-x" onclick="document.getElementById('detail-overlay').classList.remove('open')">✕</button>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
+  <script>
+    const user = requireAuth(['student','faculty']);
+    if (!user) throw 0;
+    document.getElementById('nav-ph').innerHTML = renderNav(user);
+
+    const bookings = DB.getMyBookings(user.id);
+
+    function render() {
+      const q  = document.getElementById('search').value.toLowerCase();
+      const st = document.getElementById('filter').value;
+      const data = bookings.filter(b=>{
+        if (st && b.status!==st) return false;
+        if (q && !`${b.facility} ${b.purpose}`.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      const tbody = document.getElementById('tbody');
+      const empty = document.getElementById('empty');
+      if (!data.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+      empty.style.display='none';
+
+      tbody.innerHTML = data.map(b=>`
+        <tr>
+          <td style="font-size:.72rem;letter-spacing:.05em;">${b.id}</td>
+          <td>${b.facility}</td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.purpose}</td>
+          <td style="font-size:.8rem;">${fmtDate(b.date)}</td>
+          <td style="font-size:.78rem;">${fmtTime(b.timeStart)}–${fmtTime(b.timeEnd)}</td>
+          <td style="font-family:var(--mono);font-size:.75rem;">${b.useLED?'<span style="color:var(--warning);">YES</span>':'<span style="color:var(--text3);">NO</span>'}</td>
+          <td>${badge(b.status)}</td>
+          <td style="font-size:.74rem;color:var(--text3);">${fmtDate(b.createdAt)}</td>
+          <td><button class="btn btn-sm btn-ghost" onclick="openDetail('${b.id}')">VIEW</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function openDetail(id) {
+      const b = bookings.find(x=>x.id===id);
+      if (!b) return;
+      const steps = DB.getStepsForBooking(id);
+
+      document.getElementById('detail-body').innerHTML = `
+        <h2 style="font-size:.9rem;margin-bottom:1rem;">// BOOKING DETAIL</h2>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+          <span style="font-family:var(--mono);font-size:.72rem;color:var(--text3);">${b.id}</span>
+          ${badge(b.status)}
+        </div>
+
+        <div class="grid-2 gap1 mb2">
+          <div><div class="section-label">FACILITY</div><div style="font-family:var(--mono);font-size:.82rem;">${b.facility}</div></div>
+          <div><div class="section-label">DATE</div><div style="font-family:var(--mono);font-size:.82rem;">${fmtDate(b.date)}</div></div>
+          <div><div class="section-label">TIME</div><div style="font-family:var(--mono);font-size:.82rem;">${fmtTime(b.timeStart)} – ${fmtTime(b.timeEnd)}</div></div>
+          <div><div class="section-label">PARTICIPANTS</div><div style="font-family:var(--mono);font-size:.82rem;">${b.participants}</div></div>
+          <div style="grid-column:span 2;"><div class="section-label">PURPOSE</div><div style="font-family:var(--mono);font-size:.82rem;">${b.purpose}</div></div>
+          ${b.notes?`<div style="grid-column:span 2;"><div class="section-label">NOTES</div><div style="font-size:.8rem;color:var(--text2);">${b.notes}</div></div>`:''}
+          <div><div class="section-label">LED WALL</div><div style="font-family:var(--mono);font-size:.82rem;">${b.useLED?'YES':'NO'}</div></div>
+          <div><div class="section-label">FILED</div><div style="font-family:var(--mono);font-size:.78rem;color:var(--text3);">${fmtDT(b.createdAt)}</div></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">// APPROVAL TRAIL</div>
+        <div class="steps">
+          ${steps.map((s,i)=>`
+            <div class="step">
+              <div class="step-dot ${stepDotClass(s.status)}">${stepDotIcon(s.status)}</div>
+              <div class="step-body">
+                <div class="step-title">${i+1}. ${s.label}</div>
+                <div class="step-sub">${s.status.toUpperCase()}${s.actedAt?' · '+fmtDT(s.actedAt):''}</div>
+                ${s.note?`<div class="step-note">"${s.note}"</div>`:''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      document.getElementById('detail-overlay').classList.add('open');
+    }
+
+    document.getElementById('detail-overlay').addEventListener('click', e=>{
+      if (e.target===document.getElementById('detail-overlay'))
+        document.getElementById('detail-overlay').classList.remove('open');
+    });
+
+    render();
+  </script>
+</body>
+</html>

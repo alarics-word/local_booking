@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCHOOLBOOK — Access</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+
+    .access-wrap {
+      width:100%; max-width:960px;
+      display:flex; gap:0;
+      border:1px solid var(--greenbdr);
+      border-radius:var(--radius-lg);
+      overflow:hidden;
+      position:relative; z-index:1;
+      box-shadow: 0 0 60px rgba(0,255,65,0.08), 0 0 120px rgba(0,255,65,0.04);
+      animation: fadeIn .5s ease;
+    }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    /* LEFT — branding */
+    .access-left {
+      flex:1; background:var(--bg2);
+      border-right:1px solid var(--greenbdr);
+      padding:2.5rem; display:flex; flex-direction:column; justify-content:space-between;
+    }
+
+    .logo {
+      font-family:var(--mono); font-size:1.3rem;
+      color:var(--green); text-shadow:0 0 14px var(--green);
+      letter-spacing:.08em; margin-bottom:.4rem;
+    }
+    .logo-sub { font-family:var(--mono); font-size:.7rem; color:var(--text3); letter-spacing:.15em; text-transform:uppercase; }
+
+    .terminal-block {
+      background:var(--bg3); border:1px solid var(--greenbdr);
+      border-radius:var(--radius); padding:1.2rem; margin-top:2rem;
+    }
+    .t-line {
+      font-family:var(--mono); font-size:.74rem; color:var(--text2);
+      margin-bottom:4px; display:flex; gap:8px;
+    }
+    .t-line .prompt { color:var(--green2); }
+    .t-line .cmd    { color:var(--text); }
+    .t-line .out    { color:var(--text3); padding-left:1rem; }
+
+    .feature-list { margin-top:2rem; display:flex; flex-direction:column; gap:10px; }
+    .feat {
+      display:flex; align-items:center; gap:10px;
+      font-family:var(--mono); font-size:.74rem; color:var(--text2);
+    }
+    .feat::before { content:'►'; color:var(--green); font-size:.6rem; }
+
+    .footer-note { font-family:var(--mono); font-size:.65rem; color:var(--text3); margin-top:auto; padding-top:2rem; }
+
+    /* RIGHT — form panel */
+    .access-right {
+      width:420px; background:var(--black);
+      padding:2rem 2rem;
+      display:flex; flex-direction:column; justify-content:center;
+    }
+
+    .tab-row {
+      display:flex; gap:4px; margin-bottom:1.8rem;
+      background:var(--bg3); border:1px solid var(--greenbdr);
+      border-radius:var(--radius); padding:3px;
+    }
+    .tab-btn {
+      flex:1; padding:7px; border:none; border-radius:4px;
+      font-family:var(--mono); font-size:.72rem; letter-spacing:.08em;
+      text-transform:uppercase; cursor:pointer; transition:all .15s;
+      background:transparent; color:var(--text3);
+    }
+    .tab-btn.active {
+      background:var(--green); color:var(--black); font-weight:700;
+      box-shadow:0 0 10px rgba(0,255,65,.3);
+    }
+
+    .panel { display:none; }
+    .panel.show { display:block; }
+
+    .panel-title {
+      font-family:var(--mono); font-size:.9rem; color:var(--green);
+      letter-spacing:.05em; margin-bottom:.3rem;
+    }
+    .panel-sub { font-family:var(--mono); font-size:.7rem; color:var(--text3); margin-bottom:1.4rem; letter-spacing:.05em; }
+
+    .admin-hint {
+      background:rgba(0,255,65,.04); border:1px solid var(--greenbdr);
+      border-radius:var(--radius); padding:.8rem 1rem; margin-bottom:1.2rem;
+    }
+    .admin-hint p { font-family:var(--mono); font-size:.68rem; color:var(--text3); margin-bottom:3px; }
+    .admin-hint strong { color:var(--green2); }
+
+    .switch-link {
+      font-family:var(--mono); font-size:.7rem; color:var(--text3);
+      text-align:center; margin-top:1rem; letter-spacing:.05em;
+    }
+    .switch-link a { color:var(--green); cursor:pointer; }
+    .switch-link a:hover { text-shadow:0 0 8px var(--green); }
+
+    .restrict-note {
+      display:none; margin-bottom:.8rem;
+      background:rgba(255,204,0,.05); border:1px solid rgba(255,204,0,.25);
+      border-radius:var(--radius); padding:.7rem .9rem;
+      font-family:var(--mono); font-size:.68rem; color:var(--warning);
+    }
+    .restrict-note.show { display:block; }
+
+    @media(max-width:720px){
+      .access-left { display:none; }
+      .access-right { width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="access-wrap">
+  <!-- LEFT -->
+  <div class="access-left">
+    <div>
+      <div class="logo">// SCHOOLBOOK</div>
+      <div class="logo-sub">Online Facility Booking System</div>
+
+      <div class="terminal-block">
+        <div class="t-line"><span class="prompt">$</span><span class="cmd">./schoolbook --init</span></div>
+        <div class="t-line"><span class="out">Loading facility database... OK</span></div>
+        <div class="t-line"><span class="out">Alumni Gym ........... AVAILABLE</span></div>
+        <div class="t-line"><span class="out">Audio Visual Room .... AVAILABLE</span></div>
+        <div class="t-line"><span class="out">Approval workflow .... ACTIVE</span></div>
+        <div class="t-line"><span class="prompt">$</span><span class="cmd" style="animation:blink 1s step-end infinite;">_</span></div>
+      </div>
+
+      <div class="feature-list">
+        <div class="feat">Submit facility bookings online</div>
+        <div class="feat">Automated multi-level approval workflow</div>
+        <div class="feat">Real-time conflict detection</div>
+        <div class="feat">Notifications at every approval step</div>
+        <div class="feat">Full calendar view of all bookings</div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Admin credentials — ID: <span style="color:var(--green2);">00000000</span> / PW: <span style="color:var(--green2);">Admin@1234</span><br/>
+      Restricted roles (Custodian/Finance/President) require admin approval.
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="access-right">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab-btn"        onclick="switchTab('signup')">SIGN UP</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="panel show" id="panel-login">
+      <div class="panel-title">// access terminal</div>
+      <div class="panel-sub">Enter your 8-digit ID and password.</div>
+
+      <div class="admin-hint">
+        <p>Admin: <strong>ID 00000000</strong> / PW: <strong>Admin@1234</strong></p>
+        <p style="color:var(--text3);font-size:.64rem;">Use admin to approve restricted accounts.</p>
+      </div>
+
+      <div id="login-err" class="err-box" style="display:none;"></div>
+
+      <div class="form-group">
+        <label class="form-label">8-DIGIT ID</label>
+        <input id="l-id" type="text" class="form-input" maxlength="8" placeholder="00000000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <input id="l-pw" type="password" class="form-input" placeholder="••••••"/>
+      </div>
+
+      <button class="btn btn-primary btn-lg w100" style="justify-content:center;margin-top:.4rem;" onclick="doLogin()">
+        LOGIN →
+      </button>
+      <div class="switch-link">No account? <a onclick="switchTab('signup')">SIGN UP</a></div>
+    </div>
+
+    <!-- SIGN UP -->
+    <div class="panel" id="panel-signup">
+      <div class="panel-title">// register account</div>
+      <div class="panel-sub">Create your school account.</div>
+
+      <div id="signup-err" class="err-box" style="display:none;"></div>
+      <div id="signup-ok"  class="ok-box"  style="display:none;"></div>
+
+      <div class="form-group">
+        <label class="form-label">FULL NAME <span class="req">*</span></label>
+        <input id="s-name" type="text" class="form-input" placeholder="e.g. Charles Q"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">8-DIGIT ID <span class="req">*</span></label>
+        <input id="s-id" type="text" class="form-input" maxlength="8" placeholder="00000001" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD <span class="req">*</span></label>
+        <input id="s-pw" type="password" class="form-input" placeholder="Min. 6 characters"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">CONFIRM PASSWORD <span class="req">*</span></label>
+        <input id="s-pw2" type="password" class="form-input" placeholder="Repeat password"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ROLE <span class="req">*</span></label>
+        <div class="role-grid">
+          <label class="role-card" onclick="selRole(this,'student')">
+            <input type="radio" name="role" value="student"/>
+            <div class="rc-name">STUDENT</div>
+            <div class="rc-desc">Submit booking requests</div>
+          </label>
+          <label class="role-card" onclick="selRole(this,'faculty')">
+            <input type="radio" name="role" value="faculty"/>
+            <div class="rc-name">FACULTY</div>
+            <div class="rc-desc">Book + approve student requests</div>
+          </label>
+          <label class="role-card" onclick="selRole(this,'custodian')">
+            <input type="radio" name="role" value="custodian"/>
+            <div class="rc-name">CUSTODIAN</div>
+            <div class="rc-desc">Facility approver</div>
+            <div class="rc-restrict">⚠ Needs admin approval</div>
+          </label>
+          <label class="role-card" onclick="selRole(this,'finance')">
+            <input type="radio" name="role" value="finance"/>
+            <div class="rc-name">FINANCE</div>
+            <div class="rc-desc">LED wall approver</div>
+            <div class="rc-restrict">⚠ Needs admin approval</div>
+          </label>
+          <label class="role-card" style="grid-column:span 2;" onclick="selRole(this,'president')">
+            <input type="radio" name="role" value="president"/>
+            <div class="rc-name">SCHOOL PRESIDENT</div>
+            <div class="rc-desc">Final approver for all bookings</div>
+            <div class="rc-restrict">⚠ Needs admin approval</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="restrict-note" id="restrict-note">
+        ⚠ This role requires admin approval before you can log in. You will be notified once your account is activated.
+      </div>
+
+      <button class="btn btn-primary btn-lg w100" style="justify-content:center;" onclick="doSignup()">
+        CREATE ACCOUNT →
+      </button>
+      <div class="switch-link">Already registered? <a onclick="switchTab('login')">LOGIN</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script>
+  // Redirect if already logged in
+  const sess = DB.getSession();
+  if (sess) {
+    if (sess.status === 'pending') location.href = 'pending.html';
+    else location.href = 'dashboard.html';
+  }
+
+  let selectedRole = '';
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='signup')));
+    document.getElementById('panel-login').classList.toggle('show', tab==='login');
+    document.getElementById('panel-signup').classList.toggle('show', tab==='signup');
+    document.getElementById('login-err').style.display='none';
+    document.getElementById('signup-err').style.display='none';
+    document.getElementById('signup-ok').style.display='none';
+  }
+
+  function selRole(el, role) {
+    document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('sel'));
+    el.classList.add('sel');
+    el.querySelector('input').checked = true;
+    selectedRole = role;
+    const restricted = ['custodian','finance','president'].includes(role);
+    document.getElementById('restrict-note').classList.toggle('show', restricted);
+  }
+
+  function doLogin() {
+    const id = document.getElementById('l-id').value.trim();
+    const pw = document.getElementById('l-pw').value;
+    const errEl = document.getElementById('login-err');
+    errEl.style.display = 'none';
+
+    if (!id || !pw) { errEl.textContent='Please fill in both fields.'; errEl.style.display='block'; return; }
+    if (!id.match(/^\d{8}$/)) { errEl.textContent='ID must be exactly 8 digits.'; errEl.style.display='block'; return; }
+
+    const res = DB.login(id, pw);
+    if (!res.ok) {
+      if (res.pending) { location.href='pending.html'; return; }
+      errEl.textContent = res.msg; errEl.style.display = 'block'; return;
+    }
+    DB.setSession(res.user);
+    location.href = 'dashboard.html';
+  }
+
+  function doSignup() {
+    const name = document.getElementById('s-name').value.trim();
+    const id   = document.getElementById('s-id').value.trim();
+    const pw   = document.getElementById('s-pw').value;
+    const pw2  = document.getElementById('s-pw2').value;
+    const errEl = document.getElementById('signup-err');
+    const okEl  = document.getElementById('signup-ok');
+    errEl.style.display = 'none';
+    okEl.style.display  = 'none';
+
+    if (!name||!id||!pw||!pw2||!selectedRole) { errEl.textContent='Please fill in all fields and select a role.'; errEl.style.display='block'; return; }
+    if (pw !== pw2) { errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return; }
+
+    const res = DB.register({ id, name, password: pw, role: selectedRole });
+    if (!res.ok) { errEl.textContent = res.msg; errEl.style.display='block'; return; }
+
+    const restricted = ['custodian','finance','president'].includes(selectedRole);
+    if (restricted) {
+      okEl.textContent = `[OK] Account created. Pending admin approval. Log in once approved.`;
+      okEl.style.display = 'block';
+    } else {
+      DB.setSession(res.user);
+      location.href = 'dashboard.html';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const isLogin = document.getElementById('panel-login').classList.contains('show');
+    isLogin ? doLogin() : doSignup();
+  });
+</script>
+</body>
+</html>

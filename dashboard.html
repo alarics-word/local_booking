@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCHOOLBOOK — Dashboard</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div id="nav-ph"></div>
+  <div class="page-wrap">
+    <div id="content" style="position:relative;z-index:1;">
+      <div style="font-family:var(--mono);color:var(--text3);padding:3rem;text-align:center;">LOADING...</div>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user) throw 0;
+
+    document.getElementById('nav-ph').innerHTML = renderNav(user);
+    initNotifPanel(user);
+
+    const isBooker   = ['student','faculty'].includes(user.role);
+    const isApprover = ['faculty','custodian','finance','president'].includes(user.role);
+    const isAdmin    = user.role === 'admin' || user.role === 'president';
+
+    const myBookings    = isBooker ? DB.getMyBookings(user.id) : [];
+    const allBookings   = DB.getAllBookings();
+    const pendingApprovals = isApprover ? DB.getPendingForRole(user.role) : [];
+
+    const src = isBooker ? myBookings : allBookings;
+    const stats = {
+      total:    src.length,
+      approved: src.filter(b=>b.status==='approved').length,
+      inprog:   src.filter(b=>['pending','inreview'].includes(b.status)).length,
+      rejected: src.filter(b=>b.status==='rejected').length,
+    };
+
+    document.getElementById('content').innerHTML = `
+      <div class="flex-b mb3" style="flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div class="page-header" style="margin-bottom:0;">
+            <h1>// ${user.name.split(' ')[0].toUpperCase()}'S TERMINAL</h1>
+            <p style="color:var(--text3);font-family:var(--mono);font-size:.72rem;">ID: ${user.id} · ${user.role.toUpperCase()} · ${new Date().toLocaleDateString('en-PH')}</p>
+          </div>
+        </div>
+        ${isBooker ? `<a href="book.html" class="btn btn-primary">+ NEW BOOKING</a>` : ''}
+        ${user.role==='admin' ? `<a href="admin.html" class="btn btn-primary">⚙ ADMIN PANEL</a>` : ''}
+      </div>
+
+      <!-- STATS -->
+      <div class="grid-4 mb3">
+        <div class="card stat-card">
+          <div class="stat-val">${stats.total}</div>
+          <div class="stat-lbl">${isBooker?'MY REQUESTS':'TOTAL BOOKINGS'}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-val" style="color:var(--green);">${stats.approved}</div>
+          <div class="stat-lbl">APPROVED</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-val" style="color:var(--warning);">${stats.inprog}</div>
+          <div class="stat-lbl">IN PROGRESS</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-val" style="color:${isApprover?'var(--green)':'var(--danger)'};">${isApprover?pendingApprovals.length:stats.rejected}</div>
+          <div class="stat-lbl">${isApprover?'NEEDS MY ACTION':'REJECTED'}</div>
+        </div>
+      </div>
+
+      <div class="grid-2 gap2">
+        <!-- LEFT -->
+        <div>
+          ${isApprover && pendingApprovals.length ? `
+            <div class="section-label">// PENDING YOUR APPROVAL</div>
+            <div class="card mb2" style="overflow:hidden;">
+              ${pendingApprovals.slice(0,3).map(({step,booking})=>`
+                <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--greenbdr);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:.82rem;color:var(--text);">${booking.facility}</div>
+                    <div style="font-family:var(--mono);font-size:.7rem;color:var(--text3);">
+                      ${DB.getUserById(booking.userId)?.name||'—'} · ${fmtDate(booking.date)} · ${fmtTime(booking.timeStart)}
+                    </div>
+                  </div>
+                  <a href="approvals.html" class="btn btn-sm btn-primary">REVIEW</a>
+                </div>
+              `).join('')}
+              <div style="padding:.7rem 1.2rem;">
+                <a href="approvals.html" style="font-family:var(--mono);font-size:.7rem;color:var(--green);text-decoration:none;">VIEW ALL APPROVALS →</a>
+              </div>
+            </div>
+          ` : ''}
+
+          ${isBooker ? `
+            <div class="section-label">// MY RECENT BOOKINGS</div>
+            <div class="card" style="overflow:hidden;">
+              ${!myBookings.length ? `
+                <div class="empty"><div class="empty-icon">📭</div>
+                <div class="empty-title">No bookings yet.</div>
+                <div class="empty-sub"><a href="book.html" style="color:var(--green);">Submit your first request →</a></div></div>
+              ` : myBookings.slice(0,5).map(b=>`
+                <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--greenbdr);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:.82rem;">${b.facility}</div>
+                    <div style="font-family:var(--mono);font-size:.7rem;color:var(--text3);">${fmtDate(b.date)}</div>
+                  </div>
+                  ${badge(b.status)}
+                </div>
+              `).join('')}
+              <div style="padding:.7rem 1.2rem;">
+                <a href="my-bookings.html" style="font-family:var(--mono);font-size:.7rem;color:var(--green);text-decoration:none;">VIEW ALL →</a>
+              </div>
+            </div>
+          ` : ''}
+
+          ${user.role==='admin' ? `
+            <div class="section-label">// PENDING ACCOUNT APPROVALS</div>
+            <div class="card" style="overflow:hidden;">
+              ${DB.getUsers().filter(u=>u.status==='pending').length===0 ? `
+                <div class="empty" style="padding:1.5rem;">
+                  <div class="empty-sub">No pending accounts.</div>
+                </div>
+              ` : DB.getUsers().filter(u=>u.status==='pending').slice(0,4).map(u=>`
+                <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--greenbdr);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:.82rem;">${u.name}</div>
+                    <div style="font-family:var(--mono);font-size:.7rem;color:var(--text3);">ID: ${u.id} · ${roleBadge(u.role)}</div>
+                  </div>
+                  <a href="admin.html" class="btn btn-sm btn-outline">APPROVE</a>
+                </div>
+              `).join('')}
+              <div style="padding:.7rem 1.2rem;">
+                <a href="admin.html" style="font-family:var(--mono);font-size:.7rem;color:var(--green);text-decoration:none;">MANAGE USERS →</a>
+              </div>
+            </div>
+          `:''}
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+          <div class="section-label">// APPROVAL WORKFLOW</div>
+          <div class="card p3 mb2">
+            <div class="steps">
+              ${[
+                ['SUBMIT REQUEST','Requester fills online form.',null],
+                ['FACULTY APPROVAL','Required when requester is a student.','faculty'],
+                ['PROPERTY CUSTODIAN','Verifies facility availability.','custodian'],
+                ['FINANCE OFFICE','Required when LED wall is requested.','finance'],
+                ['SCHOOL PRESIDENT','Final approval for all bookings.','president'],
+              ].map(([title,sub,role],i)=>`
+                <div class="step">
+                  <div class="step-dot ${role===user.role?'active':i===0?'done':'pending'}">${i===0?'✓':i}</div>
+                  <div class="step-body">
+                    <div class="step-title">${title}</div>
+                    <div class="step-sub">${sub}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="section-label">// QUICK ACCESS</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${isBooker?`<a href="book.html" class="btn btn-outline w100" style="justify-content:center;">+ NEW BOOKING REQUEST</a>`:''}
+            <a href="calendar.html" class="btn btn-ghost w100" style="justify-content:center;">📅 FACILITY CALENDAR</a>
+            ${isApprover?`<a href="approvals.html" class="btn btn-ghost w100" style="justify-content:center;">✓ PENDING APPROVALS</a>`:''}
+            ${isBooker?`<a href="my-bookings.html" class="btn btn-ghost w100" style="justify-content:center;">📂 MY BOOKING HISTORY</a>`:''}
+            ${isAdmin?`<a href="admin.html" class="btn btn-ghost w100" style="justify-content:center;">⚙ ADMIN PANEL</a>`:''}
+          </div>
+        </div>
+      </div>
+    `;
+  </script>
+</body>
+</html>

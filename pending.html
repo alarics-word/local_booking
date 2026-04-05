@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCHOOLBOOK — Pending</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .pending-box {
+      background:var(--bg2); border:1px solid var(--greenbdr);
+      border-radius:var(--radius-lg); padding:2.5rem 2rem;
+      max-width:440px; width:92%; text-align:center;
+      box-shadow:0 0 40px rgba(0,255,65,.06);
+      position:relative; z-index:1; animation:fadeIn .4s ease;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .pending-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green3),transparent);}
+    .pending-icon { font-family:var(--mono); font-size:2.5rem; color:var(--warning); margin-bottom:1rem; animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse{0%,100%{text-shadow:0 0 8px var(--warning)}50%{text-shadow:0 0 20px var(--warning)}}
+    h1 { font-family:var(--mono); font-size:1rem; color:var(--green); letter-spacing:.05em; margin-bottom:.6rem; }
+    p  { font-family:var(--mono); font-size:.76rem; color:var(--text3); line-height:1.7; margin-bottom:1.2rem; }
+    .info { background:var(--bg3); border:1px solid var(--greenbdr); border-radius:var(--radius); padding:.9rem 1rem; margin-bottom:1.4rem; text-align:left; }
+    .info p { margin:0; font-size:.72rem; }
+  </style>
+</head>
+<body>
+  <div class="pending-box">
+    <div class="pending-icon">⏳</div>
+    <h1>// ACCOUNT PENDING</h1>
+    <p>Your account has been created but requires administrator approval. This applies to Custodian, Finance, and School President roles.</p>
+    <div class="info">
+      <p><span style="color:var(--green2);">WHAT NEXT?</span><br/>
+      The admin (ID: 00000000) will review and activate your account. Once approved, log in using your ID and password.</p>
+    </div>
+    <div id="user-info" style="margin-bottom:1.2rem;"></div>
+    <button class="btn btn-outline w100" style="justify-content:center;" onclick="logout()">← BACK TO LOGIN</button>
+  </div>
+
+  <script src="db.js"></script>
+  <script>
+    const user = DB.getSession();
+    if (user && user.status === 'active') { location.href = 'dashboard.html'; }
+    if (!user) { location.href = 'index.html'; }
+
+    if (user) {
+      document.getElementById('user-info').innerHTML = `
+        <div style="background:rgba(0,255,65,.04);border:1px solid var(--greenbdr);border-radius:var(--radius);padding:.7rem 1rem;font-family:var(--mono);font-size:.74rem;text-align:left;">
+          <div style="color:var(--text3);">Registered as:</div>
+          <div style="color:var(--text);margin-top:4px;">${user.name} ${roleBadge(user.role)}</div>
+          <div style="color:var(--text3);font-size:.68rem;margin-top:2px;">ID: ${user.id}</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
